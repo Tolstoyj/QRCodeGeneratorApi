@@ -1,12 +1,8 @@
 [build]
-builder = "nixpacks"
+builder = "dockerfile"
 
 [deploy]
-startCommand = "./target/release/qr-api"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 10
-
-[env]
-RUST_VERSION = "1.88" 
+restartPolicyMaxRetries = 10 
