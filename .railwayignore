@@ -1,0 +1,8 @@
+Dockerfile
+.dockerignore
+docker-compose.yml
+*.md
+.git
+.github
+target/debug
+target/test 

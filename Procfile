@@ -1,1 +1,1 @@
-web: cargo run --release 
+web: cargo build --release && ./target/release/qr-api 

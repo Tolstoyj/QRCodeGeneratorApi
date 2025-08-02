@@ -303,7 +303,7 @@ qr-api/
 │   ├── services/        # Business logic
 │   └── main.rs         # Application entry point
 ├── Cargo.toml          # Rust dependencies
-├── Dockerfile          # Docker configuration
+├── railway.toml        # Railway deployment configuration
 └── README.md           # This file
 ```
 
