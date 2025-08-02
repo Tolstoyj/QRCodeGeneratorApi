@@ -152,6 +152,32 @@ LOG_LEVEL=info
 MAX_URL_LENGTH=2048
 ```
 
+### Railway Deployment (Recommended)
+
+1. **Install Railway CLI**
+```bash
+npm install -g @railway/cli
+```
+
+2. **Login to Railway**
+```bash
+railway login
+```
+
+3. **Deploy to Railway**
+```bash
+railway init
+railway up
+```
+
+4. **Set Environment Variables** (Optional)
+```bash
+railway variables set HOST=0.0.0.0
+railway variables set PORT=3000
+railway variables set LOG_LEVEL=info
+railway variables set MAX_URL_LENGTH=2048
+```
+
 ### Docker Deployment
 
 1. **Build the image**
