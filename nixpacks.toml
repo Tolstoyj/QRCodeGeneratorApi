@@ -11,4 +11,5 @@ cmds = ["cargo build --release"]
 cmd = "./target/release/qr-api"
 
 [variables]
-RUST_VERSION = "1.88" 
+RUST_VERSION = "1.88"
+NIXPACKS_BUILD_CMD = "cargo build --release" 

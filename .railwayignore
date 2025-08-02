@@ -1,8 +1,25 @@
+# Docker files
 Dockerfile
 .dockerignore
 docker-compose.yml
+docker-compose.yaml
+
+# Documentation
 *.md
 .git
 .github
+
+# Debug builds
 target/debug
-target/test 
+target/test
+
+# IDE files
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log 

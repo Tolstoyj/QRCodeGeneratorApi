@@ -10,4 +10,5 @@ restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
 [env]
-RUST_VERSION = "1.88" 
+RUST_VERSION = "1.88"
+NIXPACKS_BUILD_CMD = "cargo build --release" 
