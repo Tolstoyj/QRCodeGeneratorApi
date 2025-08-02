@@ -19,6 +19,8 @@ A fast, lightweight, and production-ready QR code generation API built with Rust
 - **Docker Support**: Easy deployment with Docker
 - **Configurable**: Environment-based configuration
 
+> 📋 **Roadmap**: See [ROADMAP.md](ROADMAP.md) for upcoming features and development plans
+
 ## 📋 API Endpoints
 
 ### Health Check
