@@ -1,5 +1,8 @@
+pub mod v2;
+
 use serde::{Deserialize, Serialize};
 
+// V1 Models (Legacy)
 #[derive(Deserialize)]
 pub struct QrRequest {
     pub url: String,
@@ -11,6 +14,7 @@ pub struct QrResponse {
     pub format: String,
 }
 
+// Common Models
 #[derive(Serialize)]
 pub struct HealthResponse {
     pub status: String,

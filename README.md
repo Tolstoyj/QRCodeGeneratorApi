@@ -5,6 +5,7 @@ A fast, lightweight, and production-ready QR code generation API built with Rust
 ![QR Code API](https://img.shields.io/badge/Rust-1.70+-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)
 
 ### Sample QR Code
 ![Sample QR Code](assets/sample_qr.png)
@@ -12,24 +13,36 @@ A fast, lightweight, and production-ready QR code generation API built with Rust
 
 ## 🚀 Features
 
+### Core Features
 - **Fast QR Generation**: Built with Rust for optimal performance
-- **Multiple Formats**: Get QR codes as JSON with base64 or direct PNG download
+- **Multiple Output Formats**: PNG, SVG, and JPEG support
 - **CORS Enabled**: Ready for web applications
 - **Production Ready**: Includes logging, error handling, and validation
 - **Docker Support**: Easy deployment with Docker
 - **Configurable**: Environment-based configuration
 
+### ✨ New in v2.0.0
+- **🎨 Customizable QR Codes**: Control size, colors, and error correction
+- **📏 Multiple Sizes**: Small (150px), Medium (300px), Large (600px), or Custom
+- **🔒 Error Correction Levels**: L (~7%), M (~15%), Q (~25%), H (~30%)
+- **🎯 Color Customization**: Set custom foreground/background colors
+- **✅ Enhanced Validation**: URL format checking and security validation
+- **🔄 Backward Compatible**: V1 endpoints remain fully functional
+- **📊 Multiple API Styles**: POST with JSON or GET with query parameters
+
 > 📋 **Roadmap**: See [ROADMAP.md](ROADMAP.md) for upcoming features and development plans
 
 ## 📋 API Endpoints
 
-### Health Check
+### V1 Endpoints (Legacy)
+
+#### Health Check
 ```http
 GET /
 ```
 Returns API status and available endpoints.
 
-### Generate QR Code (JSON)
+#### Generate QR Code (JSON)
 ```http
 GET /generate?url=<your-url>
 ```
@@ -43,11 +56,65 @@ Returns QR code as base64-encoded PNG in JSON format.
 }
 ```
 
-### Generate QR Code (PNG Download)
+#### Generate QR Code (PNG Download)
 ```http
 GET /image?url=<your-url>
 ```
 Returns downloadable PNG image directly.
+
+### V2 Endpoints (Enhanced) 🆕
+
+#### Generate Customized QR Code (JSON)
+```http
+POST /v2/generate
+Content-Type: application/json
+
+{
+  "url": "https://example.com",
+  "customization": {
+    "size": "medium",              // "small", "medium", "large", or number
+    "error_correction": "M",       // "L", "M", "Q", "H"
+    "colors": {
+      "foreground": "#000000",     // Hex color for QR code
+      "background": "#FFFFFF"      // Hex color for background
+    },
+    "border_width": 4,             // Border size in pixels
+    "format": "png"                // "png", "svg", "jpeg"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "qr_code": "data:image/png;base64,iVBORw0KGgo...",
+  "format": "png",
+  "size": "medium (300px)",
+  "error_correction": "M",
+  "colors": {
+    "foreground": "#000000",
+    "background": "#FFFFFF"
+  },
+  "border_width": 4
+}
+```
+
+#### Generate Customized QR Code (Query Parameters)
+```http
+GET /v2/generate?url=<url>&size=<size>&format=<format>&error_correction=<level>&foreground_color=<hex>&background_color=<hex>&border_width=<number>
+```
+
+#### Generate Customized QR Code (Image Download)
+```http
+POST /v2/image
+Content-Type: application/json
+
+{
+  "url": "https://example.com",
+  "customization": { ... }
+}
+```
+Returns downloadable image file in specified format.
 
 ## 🛠️ Installation & Usage
 
@@ -101,28 +168,75 @@ docker run -p 3000:3000 qr-code-api
 
 ### Using cURL
 
-**Generate QR code as JSON:**
+#### V1 API (Legacy)
 ```bash
+# Generate QR code as JSON
 curl "http://localhost:3000/generate?url=https://github.com"
+
+# Download QR code as PNG
+curl "http://localhost:3000/image?url=https://github.com" -o qr_code.png
 ```
 
-**Download QR code as PNG:**
+#### V2 API (Enhanced)
 ```bash
-curl "http://localhost:3000/image?url=https://github.com" -o qr_code.png
+# Generate customized QR code (POST)
+curl -X POST "http://localhost:3000/v2/generate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://github.com",
+    "customization": {
+      "size": "large",
+      "error_correction": "H",
+      "colors": {
+        "foreground": "#FF0000",
+        "background": "#FFFFFF"
+      },
+      "format": "png"
+    }
+  }'
+
+# Generate with query parameters (GET)
+curl "http://localhost:3000/v2/generate?url=https://github.com&size=medium&foreground_color=%2300FF00"
+
+# Download customized image
+curl -X POST "http://localhost:3000/v2/image" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://github.com",
+    "customization": {
+      "size": "medium",
+      "format": "png"
+    }
+  }' -o custom_qr.png
 ```
 
 ### Using JavaScript/Fetch
 
 ```javascript
-// Generate QR code
+// V1 API - Basic QR code
 const response = await fetch('http://localhost:3000/generate?url=https://github.com');
 const data = await response.json();
-console.log(data.qr_code); // Base64 encoded PNG
+document.getElementById('qr-image').src = data.qr_code;
 
-// Display in HTML
-const img = document.createElement('img');
-img.src = data.qr_code;
-document.body.appendChild(img);
+// V2 API - Customized QR code
+const customQR = await fetch('http://localhost:3000/v2/generate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    url: 'https://github.com',
+    customization: {
+      size: 'large',
+      error_correction: 'H',
+      colors: {
+        foreground: '#0066CC',
+        background: '#FFFFFF'
+      },
+      format: 'png'
+    }
+  })
+});
+const customData = await customQR.json();
+console.log('Custom QR:', customData);
 ```
 
 ### Using Python
