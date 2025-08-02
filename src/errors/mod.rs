@@ -6,9 +6,8 @@ use axum::{
 use serde::Serialize;
 
 #[derive(Debug)]
-pub enum AppError {
-    QrGeneration(String),
-    ImageEncoding(String),
+pub enum ApiError {
+    GenerationError(String),
     ValidationError(String),
 }
 
@@ -18,12 +17,11 @@ struct ErrorResponse {
     code: String,
 }
 
-impl IntoResponse for AppError {
+impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let (status, error_message, error_code) = match self {
-            AppError::QrGeneration(msg) => (StatusCode::BAD_REQUEST, msg, "QR_GENERATION_ERROR"),
-            AppError::ImageEncoding(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg, "IMAGE_ENCODING_ERROR"),
-            AppError::ValidationError(msg) => (StatusCode::BAD_REQUEST, msg, "VALIDATION_ERROR"),
+            ApiError::GenerationError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg, "GENERATION_ERROR"),
+            ApiError::ValidationError(msg) => (StatusCode::BAD_REQUEST, msg, "VALIDATION_ERROR"),
         };
 
         let body = Json(ErrorResponse {
@@ -35,14 +33,13 @@ impl IntoResponse for AppError {
     }
 }
 
-impl std::fmt::Display for AppError {
+impl std::fmt::Display for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AppError::QrGeneration(msg) => write!(f, "QR Generation Error: {}", msg),
-            AppError::ImageEncoding(msg) => write!(f, "Image Encoding Error: {}", msg),
-            AppError::ValidationError(msg) => write!(f, "Validation Error: {}", msg),
+            ApiError::GenerationError(msg) => write!(f, "Generation Error: {}", msg),
+            ApiError::ValidationError(msg) => write!(f, "Validation Error: {}", msg),
         }
     }
 }
 
-impl std::error::Error for AppError {}
+impl std::error::Error for ApiError {}

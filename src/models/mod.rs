@@ -24,21 +24,3 @@ pub struct EndpointInfo {
     pub method: String,
     pub description: String,
 }
-
-impl QrRequest {
-    pub fn validate(&self) -> Result<(), crate::errors::AppError> {
-        if self.url.is_empty() {
-            return Err(crate::errors::AppError::ValidationError(
-                "URL cannot be empty".to_string(),
-            ));
-        }
-
-        if self.url.len() > 2048 {
-            return Err(crate::errors::AppError::ValidationError(
-                "URL too long (max 2048 characters)".to_string(),
-            ));
-        }
-
-        Ok(())
-    }
-}
