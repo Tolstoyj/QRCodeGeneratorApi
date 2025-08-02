@@ -6,6 +6,10 @@ A fast, lightweight, and production-ready QR code generation API built with Rust
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)
 
+### Sample QR Code
+![Sample QR Code](assets/sample_qr.png)
+*This QR code links to the GitHub repository*
+
 ## 🚀 Features
 
 - **Fast QR Generation**: Built with Rust for optimal performance
