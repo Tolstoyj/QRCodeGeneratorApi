@@ -16,8 +16,7 @@ use tower_http::cors::CorsLayer;
 use tracing::info;
 use tracing_subscriber;
 
-use handlers::{health, generate_qr_json, generate_qr_image};
-use handlers::v2::{generate_qr_json_v2, generate_qr_image_v2, generate_qr_query_v2};
+use handlers::{health, generate_qr_json, generate_qr_image, generate_qr_query};
 use middleware::logging_middleware;
 use state::AppState;
 
@@ -34,14 +33,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Build router with routes and middleware
     let app = Router::new()
-        // V1 Routes (Legacy)
+        // Core Routes
         .route("/", get(health))
-        .route("/generate", get(generate_qr_json))
-        .route("/image", get(generate_qr_image))
-        // V2 Routes (Enhanced)
-        .route("/v2/generate", post(generate_qr_json_v2))
-        .route("/v2/generate", get(generate_qr_query_v2))
-        .route("/v2/image", post(generate_qr_image_v2))
+        .route("/generate", post(generate_qr_json))
+        .route("/generate", get(generate_qr_query))
+        .route("/image", post(generate_qr_image))
         // Middleware
         .layer(axum_middleware::from_fn(logging_middleware))
         .layer(CorsLayer::permissive())
@@ -57,11 +53,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("🚀 QR Code API server running on http://{}", bind_address);
     info!("📖 Available endpoints:");
     info!("   Health:     GET  /");
-    info!("   V1 JSON:    GET  /generate?url=<url>");
-    info!("   V1 PNG:     GET  /image?url=<url>");
-    info!("   V2 JSON:    POST /v2/generate");
-    info!("   V2 Query:   GET  /v2/generate?url=<url>&size=<size>&...");
-    info!("   V2 Image:   POST /v2/image");
+    info!("   Generate:   POST /generate (JSON body with customization)");
+    info!("   Generate:   GET  /generate?url=<url>&size=<size>&...");
+    info!("   Download:   POST /image (JSON body with customization)");
     
     // Start server
     axum::serve(listener, app)
