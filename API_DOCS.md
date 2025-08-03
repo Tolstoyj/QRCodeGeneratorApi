@@ -199,38 +199,223 @@ const response = await fetch('/v2/generate', {
 });
 ```
 
-### Key Differences
-1. **Customization Options**: V2 offers full control over QR appearance
-2. **Error Correction**: V2 allows choosing error correction level
-3. **Color Support**: V2 supports custom colors with contrast validation
-4. **Multiple Formats**: V2 supports PNG, SVG, and JPEG
-5. **Size Control**: V2 offers preset and custom sizes
+#### Feature Comparison
 
-### Backward Compatibility
-- All V1 endpoints remain functional
-- No breaking changes to existing integrations
-- V1 endpoints will be maintained indefinitely
+| Feature | V1 | V2 |
+|---------|----|----|
+| **Basic QR Generation** | ✅ | ✅ |
+| **Custom Sizes** | ❌ | ✅ |
+| **Error Correction Levels** | ❌ | ✅ |
+| **Color Customization** | ❌ | ✅ |
+| **Multiple Formats** | ❌ | ✅ |
+| **Border Control** | ❌ | ✅ |
+| **JSON Response** | ✅ | ✅ |
+| **Direct Download** | ✅ | ✅ |
+| **Query Parameters** | ✅ | ✅ |
+| **POST Support** | ❌ | ✅ |
 
----
+#### Backward Compatibility Promise
 
-## Size Reference
-
-| Size | Pixels | Use Case |
-|------|---------|----------|
-| small | 150×150 | Mobile apps, small displays |
-| medium | 300×300 | Web pages, standard use |
-| large | 600×600 | Print, high-resolution displays |
-| custom | 50-2000 | Specific requirements |
-
-## Error Correction Levels
-
-| Level | Recovery | Use Case |
-|-------|----------|----------|
-| L | ~7% | Clean environments, maximum data |
-| M | ~15% | General use (default) |
-| Q | ~25% | Moderate damage expected |
-| H | ~30% | Harsh environments, logos overlay |
+✅ **V1 endpoints will never be removed**  
+✅ **No breaking changes to V1 behavior**  
+✅ **V1 continues to receive security updates**  
+⚠️ **New features only added to V2+**
 
 ---
 
-*For more information, see the [README](README.md) and [ROADMAP](ROADMAP.md).*
+## 💻 Code Examples
+
+### Client Libraries
+
+#### JavaScript/TypeScript SDK
+
+```typescript
+class QRAPIClient {
+  constructor(private baseURL: string = 'http://localhost:3000') {}
+
+  async generateQR(url: string, options?: QROptions): Promise<QRResponse> {
+    const response = await fetch(`${this.baseURL}/v2/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, customization: options })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error);
+    }
+    
+    return response.json();
+  }
+
+  async downloadQR(url: string, options?: QROptions): Promise<Blob> {
+    const response = await fetch(`${this.baseURL}/v2/image`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, customization: options })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to generate QR code');
+    }
+    
+    return response.blob();
+  }
+}
+
+// Usage
+const client = new QRAPIClient();
+const qr = await client.generateQR('https://example.com', {
+  size: 'large',
+  error_correction: 'H'
+});
+```
+
+#### Python Client
+
+```python
+import requests
+from typing import Optional, Dict, Any
+import base64
+
+class QRAPIClient:
+    def __init__(self, base_url: str = "http://localhost:3000"):
+        self.base_url = base_url
+        self.session = requests.Session()
+    
+    def generate_qr(
+        self,
+        url: str,
+        size: str = "medium",
+        error_correction: str = "M",
+        colors: Optional[Dict[str, str]] = None,
+        format: str = "png"
+    ) -> Dict[str, Any]:
+        payload = {
+            "url": url,
+            "customization": {
+                "size": size,
+                "error_correction": error_correction,
+                "format": format
+            }
+        }
+        
+        if colors:
+            payload["customization"]["colors"] = colors
+        
+        response = self.session.post(
+            f"{self.base_url}/v2/generate",
+            json=payload
+        )
+        response.raise_for_status()
+        return response.json()
+    
+    def save_qr(self, url: str, filename: str, **kwargs):
+        qr_data = self.generate_qr(url, **kwargs)
+        # Extract base64 data
+        image_data = qr_data['qr_code'].split(',')[1]
+        # Decode and save
+        with open(filename, 'wb') as f:
+            f.write(base64.b64decode(image_data))
+
+# Usage
+client = QRAPIClient()
+client.save_qr(
+    "https://github.com",
+    "github_qr.png",
+    size="large",
+    colors={"foreground": "#0366D6", "background": "#FFFFFF"}
+)
+```
+
+#### cURL Examples
+
+```bash
+# Function for easy QR generation
+generate_qr() {
+  local url="$1"
+  local size="${2:-medium}"
+  local output="${3:-qr.png}"
+  
+  curl -s -X POST "http://localhost:3000/v2/image" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"url\": \"$url\",
+      \"customization\": {
+        \"size\": \"$size\"
+      }
+    }" -o "$output"
+  
+  echo "QR code saved to $output"
+}
+
+# Usage
+generate_qr "https://example.com" large my_qr.png
+```
+
+---
+
+## ❓ FAQ
+
+### General Questions
+
+**Q: What's the maximum URL length?**  
+A: 2048 characters
+
+**Q: Can I generate QR codes for plain text?**  
+A: Yes, any string can be encoded
+
+**Q: Is there a rate limit?**  
+A: Not currently, but planned for v2.1.0 (100 req/min)
+
+**Q: Can I use this API in production?**  
+A: Yes, it's production-ready with proper error handling
+
+### Technical Questions
+
+**Q: What's the difference between error correction levels?**  
+A: Higher levels allow more damage but reduce data capacity:
+- L: ~7% error correction (maximum data)
+- M: ~15% error correction (balanced)
+- Q: ~25% error correction (good for moderate damage)
+- H: ~30% error correction (best for logos/harsh conditions)
+
+**Q: Why use SVG format?**  
+A: SVG is vector-based, infinitely scalable without quality loss
+
+**Q: How do I embed a logo in the QR code?**  
+A: Use high error correction (H) and overlay logo externally (planned native support in v3.0)
+
+**Q: What's the optimal QR code size?**  
+A: Depends on use case:
+- Screen display: 200-400px
+- Print: 600px or higher
+- Business cards: 150-200px
+
+### Troubleshooting
+
+**Q: Getting "Invalid color format" error?**  
+A: Use 6-digit hex format with # prefix: `#FF0000`
+
+**Q: QR code won't scan?**  
+A: Check:
+1. Sufficient contrast between colors
+2. Adequate size for scanning distance
+3. Appropriate error correction level
+
+**Q: CORS errors in browser?**  
+A: CORS is enabled by default. Check your request headers.
+
+---
+
+## 📚 Additional Resources
+
+- [Main Documentation](README.md)
+- [Development Roadmap](ROADMAP.md)
+- [QR Code Best Practices](https://www.qrcode.com/en/about/standards.html)
+- [API Status Page](https://status.deepplaystudio.com)
+- [GitHub Repository](https://github.com/Tolstoyj/QRCodeGeneratorApi)
+
+---
+
+**Need help?** Open an issue on [GitHub](https://github.com/Tolstoyj/QRCodeGeneratorApi/issues) or contact devops@deepplaystudio.com
