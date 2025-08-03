@@ -1,8 +1,14 @@
-pub mod v2;
+pub mod enums;
+pub mod colors;
+pub mod requests;
+
+pub use enums::{QrSize, ErrorCorrectionLevel, OutputFormat};
+pub use colors::QrColors;
+pub use requests::{QrCustomization, QrRequest, QrResponse};
 
 use serde::Serialize;
 
-// Common Models
+// Health check models
 #[derive(Serialize)]
 pub struct HealthResponse {
     pub status: String,

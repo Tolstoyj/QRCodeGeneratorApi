@@ -1,240 +1,415 @@
-# QR Code API Documentation v2.0.0
+# 📚 QR Code API Documentation
 
-## Table of Contents
-- [V1 API (Legacy)](#v1-api-legacy)
-- [V2 API (Enhanced)](#v2-api-enhanced)
-- [Error Handling](#error-handling)
-- [Migration Guide](#migration-guide)
+> **Complete API reference for QR Code Generator Service**  
+> Last Updated: August 2025
 
----
+## 📖 Table of Contents
 
-## V1 API (Legacy)
+- [Quick Start](#-quick-start)
+- [Authentication](#-authentication)
+- [Base URL](#-base-url)
+- [API Reference](#api-reference)
+- [Data Types](#-data-types)
+- [Error Handling](#-error-handling)
+- [Rate Limiting](#-rate-limiting)
+- [Code Examples](#-code-examples)
+- [FAQ](#-faq)
 
-### GET /
-**Description:** Health check endpoint  
-**Response:** JSON with API status and available endpoints
+## 🚀 Quick Start
 
-### GET /generate
-**Description:** Generate QR code as base64 PNG  
-**Parameters:**
-- `url` (required): The URL or text to encode
+### Generate Your First QR Code
 
-**Example:**
 ```bash
+# Simple QR generation with query parameters
 curl "http://localhost:3000/generate?url=https://example.com"
+
+# Customized QR generation with JSON body
+curl -X POST "http://localhost:3000/generate" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
 ```
 
-### GET /image
-**Description:** Download QR code as PNG file  
-**Parameters:**
-- `url` (required): The URL or text to encode
+## 🔐 Authentication
 
-**Example:**
+**Current Status**: No authentication required  
+**Future**: API key authentication planned for future releases
+
+## 🌐 Base URL
+
+| Environment | URL |
+|-------------|-----|
+| Local Development | `http://localhost:3000` |
+| Production | `https://api.yourdomain.com` |
+| Staging | `https://staging-api.yourdomain.com` |
+
+---
+
+## API Reference
+
+### 🏥 GET /
+
+**Health Check Endpoint**
+
+| Property | Value |
+|----------|-------|
+| **Purpose** | System health check and API information |
+| **Authentication** | None |
+| **Rate Limit** | Unlimited |
+
+#### Response
+
+```json
+{
+  "status": "healthy",
+  "version": "2.0.0",
+  "endpoints": [
+    {"path": "/", "method": "GET", "description": "Health check"},
+    {"path": "/generate", "method": "POST", "description": "Generate QR as JSON"},
+    {"path": "/generate", "method": "GET", "description": "Generate QR via query"},
+    {"path": "/image", "method": "POST", "description": "Download QR image"}
+  ]
+}
+```
+
+#### Example
+
 ```bash
-curl "http://localhost:3000/image?url=https://example.com" -o qr.png
+curl -i http://localhost:3000/
 ```
 
 ---
 
-## V2 API (Enhanced)
+### 📊 POST /generate
 
-### POST /v2/generate
-**Description:** Generate customized QR code with full control  
-**Content-Type:** application/json
+**Generate QR Code with Customization**
 
-**Request Body:**
-```json
-{
-  "url": "string (required)",
-  "customization": {
-    "size": "small|medium|large|number (optional, default: medium)",
-    "error_correction": "L|M|Q|H (optional, default: M)",
-    "colors": {
-      "foreground": "#RRGGBB (optional, default: #000000)",
-      "background": "#RRGGBB (optional, default: #FFFFFF)"
-    },
-    "border_width": "number (optional, default: 4)",
-    "format": "png|svg|jpeg (optional, default: png)"
-  }
+| Property | Value |
+|----------|-------|
+| **Purpose** | Generate QR with full customization options |
+| **Method** | POST |
+| **Content-Type** | `application/json` |
+| **Max Payload** | 10KB |
+
+#### Request Schema
+
+```typescript
+interface QRRequest {
+  url: string;                    // Required: URL or text to encode
+  customization?: {
+    size?: 'small' | 'medium' | 'large' | number;  // Default: 'medium'
+    error_correction?: 'L' | 'M' | 'Q' | 'H';      // Default: 'M'
+    colors?: {
+      foreground?: string;        // Hex color (default: '#000000')
+      background?: string;        // Hex color (default: '#FFFFFF')
+    };
+    border_width?: number;        // 0-50 pixels (default: 4)
+    format?: 'png' | 'svg' | 'jpeg';  // Default: 'png'
+  };
 }
 ```
 
-**Response:**
-```json
-{
-  "qr_code": "data:image/format;base64,...",
-  "format": "png",
-  "size": "medium (300px)",
-  "error_correction": "M",
-  "colors": {
-    "foreground": "#000000",
-    "background": "#FFFFFF"
-  },
-  "border_width": 4
+#### Size Options
+
+| Size | Pixels | Use Case |
+|------|--------|----------|
+| `small` | 150×150 | Thumbnails, mobile |
+| `medium` | 300×300 | Web, standard use |
+| `large` | 600×600 | Print, high-res |
+| Custom | 50-2000 | Specific requirements |
+
+#### Error Correction Levels
+
+| Level | Recovery | Use Case |
+|-------|----------|----------|
+| `L` | ~7% | Maximum data capacity |
+| `M` | ~15% | Balanced (default) |
+| `Q` | ~25% | Moderate damage expected |
+| `H` | ~30% | Logo overlay, harsh conditions |
+
+#### Response Schema
+
+```typescript
+interface QRResponse {
+  qr_code: string;           // Base64 encoded image data
+  format: string;            // Output format used
+  size: string;              // Size description
+  error_correction: string;  // Error correction level used
+  colors: {
+    foreground: string;      // Foreground color used
+    background: string;      // Background color used
+  };
+  border_width: number;      // Border width in pixels
 }
 ```
 
-**Examples:**
+#### Examples
+
 ```bash
-# Basic usage
-curl -X POST "http://localhost:3000/v2/generate" \
+# Minimal request
+curl -X POST "http://localhost:3000/generate" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com"}'
 
-# Full customization
-curl -X POST "http://localhost:3000/v2/generate" \
+# Custom size and colors
+curl -X POST "http://localhost:3000/generate" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com",
     "customization": {
       "size": "large",
-      "error_correction": "H",
       "colors": {
-        "foreground": "#FF0000",
-        "background": "#FFFFFF"
-      },
-      "border_width": 6,
-      "format": "png"
+        "foreground": "#0066CC",
+        "background": "#F0F0F0"
+      }
+    }
+  }'
+
+# High error correction for logo overlay
+curl -X POST "http://localhost:3000/generate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://brand.com",
+    "customization": {
+      "size": 500,
+      "error_correction": "H",
+      "border_width": 10
     }
   }'
 ```
 
-### GET /v2/generate
-**Description:** Generate customized QR code using query parameters  
-**Parameters:**
-- `url` (required): The URL or text to encode
-- `size` (optional): small, medium, large, or pixel value
-- `error_correction` (optional): L, M, Q, or H
-- `foreground_color` (optional): Hex color (URL encoded)
-- `background_color` (optional): Hex color (URL encoded)
-- `border_width` (optional): Number of pixels
-- `format` (optional): png, svg, or jpeg
+---
 
-**Example:**
+### 🔗 GET /generate
+
+**Generate QR via Query Parameters**
+
+| Property | Value |
+|----------|-------|
+| **Purpose** | Generate QR using URL parameters |
+| **Method** | GET |
+| **Use Case** | Simple integrations, direct browser access |
+
+#### Query Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `url` | string | Yes | - | URL or text to encode |
+| `size` | string/number | No | `medium` | Size preset or pixels |
+| `error_correction` | string | No | `M` | Error correction level |
+| `foreground_color` | string | No | `#000000` | Hex color (URL encoded) |
+| `background_color` | string | No | `#FFFFFF` | Hex color (URL encoded) |
+| `border_width` | number | No | `4` | Border in pixels |
+| `format` | string | No | `png` | Output format |
+
+#### Examples
+
 ```bash
-curl "http://localhost:3000/v2/generate?url=https://example.com&size=large&foreground_color=%23FF0000"
+# Basic
+curl "http://localhost:3000/generate?url=https://example.com"
+
+# With size and colors
+curl "http://localhost:3000/generate?url=https://example.com&size=large&foreground_color=%230066CC"
+
+# Custom pixel size
+curl "http://localhost:3000/generate?url=https://example.com&size=400"
+
+# High error correction
+curl "http://localhost:3000/generate?url=https://example.com&error_correction=H"
+
+# Browser-friendly URL
+http://localhost:3000/generate?url=https://github.com&size=large&foreground_color=%23FF0000
 ```
 
-### POST /v2/image
-**Description:** Download customized QR code as image file  
-**Content-Type:** application/json
+---
 
-**Request Body:** Same as POST /v2/generate
+### 🖼️ POST /image
 
-**Response:** Binary image file with appropriate headers
+**Download Customized QR Image**
 
-**Example:**
+| Property | Value |
+|----------|-------|
+| **Purpose** | Generate and download customized QR image |
+| **Method** | POST |
+| **Request Type** | `application/json` |
+| **Response Type** | `image/*` (based on format) |
+
+#### Request
+
+Same schema as [POST /generate](#-post-generate)
+
+#### Response Headers
+
+```http
+Content-Type: image/png | image/svg+xml | image/jpeg
+Content-Disposition: attachment; filename="qrcode-{size}x{size}.{ext}"
+Content-Length: {size}
+```
+
+#### Examples
+
 ```bash
-curl -X POST "http://localhost:3000/v2/image" \
+# Download PNG
+curl -X POST "http://localhost:3000/image" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}' \
+  -o qr_code.png
+
+# Download SVG
+curl -X POST "http://localhost:3000/image" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com",
+    "customization": {"format": "svg"}
+  }' -o qr_code.svg
+
+# Download with custom settings
+curl -X POST "http://localhost:3000/image" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://brand.com",
     "customization": {
-      "size": "medium",
+      "size": "large",
+      "error_correction": "H",
+      "colors": {
+        "foreground": "#003366",
+        "background": "#FFFFFF"
+      },
       "format": "png"
     }
-  }' -o custom_qr.png
+  }' -o brand_qr.png
 ```
 
 ---
 
-## Error Handling
+## 📊 Data Types
 
-### Error Response Format
-```json
-{
-  "error": "Error message",
-  "code": "ERROR_CODE"
+### Color Format
+
+| Format | Example | Description |
+|--------|---------|-------------|
+| Hex (6-digit) | `#FF0000` | Standard hex color |
+| Hex (3-digit) | `#F00` | Short hex notation |
+
+### Size Values
+
+| Type | Valid Range | Examples |
+|------|-------------|----------|
+| Preset | `small`, `medium`, `large` | `"size": "large"` |
+| Custom | 50-2000 | `"size": 450` |
+
+### URL Format
+
+| Type | Example | Notes |
+|------|---------|-------|
+| HTTP/HTTPS | `https://example.com` | Standard web URLs |
+| Plain Text | `Hello World` | Any text string |
+| Special Chars | `https://site.com?q=test` | URL encode in GET |
+
+---
+
+## 🚨 Error Handling
+
+### Error Response Schema
+
+```typescript
+interface ErrorResponse {
+  error: string;      // Human-readable error message
+  code: string;       // Machine-readable error code
+  details?: {         // Additional error context (when available)
+    field?: string;   // Field that caused the error
+    value?: any;      // Invalid value provided
+    constraint?: string; // Validation constraint violated
+  };
 }
 ```
 
-### Error Codes
-- `VALIDATION_ERROR`: Invalid input parameters
-- `GENERATION_ERROR`: QR code generation failed
+### Error Codes Reference
 
-### Common Validation Errors
-- Empty URL
-- URL too long (max 2048 characters)
-- Invalid color format (must be #RRGGBB)
-- Same foreground and background colors
-- Insufficient color contrast (<3:1 ratio)
-- Invalid size (custom size must be 50-2000px)
-- Border width too large (max 50px)
+| Code | HTTP Status | Description | Example |
+|------|-------------|-------------|---------|
+| `VALIDATION_ERROR` | 400 | Invalid input parameters | Empty URL |
+| `URL_TOO_LONG` | 400 | URL exceeds max length | > 2048 chars |
+| `INVALID_COLOR` | 400 | Invalid color format | `#GGG` |
+| `INVALID_SIZE` | 400 | Size out of range | `size: 3000` |
+| `COLOR_CONTRAST` | 400 | Insufficient contrast | Same colors |
+| `GENERATION_ERROR` | 500 | QR generation failed | Internal error |
+
+### Common Error Scenarios
+
+#### 1. Empty URL
+
+```json
+{
+  "error": "URL cannot be empty",
+  "code": "VALIDATION_ERROR",
+  "details": {
+    "field": "url",
+    "constraint": "required"
+  }
+}
+```
+
+#### 2. Invalid Color Format
+
+```json
+{
+  "error": "Invalid color format. Use #RRGGBB",
+  "code": "INVALID_COLOR",
+  "details": {
+    "field": "foreground_color",
+    "value": "red",
+    "constraint": "hex_format"
+  }
+}
+```
+
+#### 3. Size Out of Range
+
+```json
+{
+  "error": "Custom size must be between 50-2000 pixels",
+  "code": "INVALID_SIZE",
+  "details": {
+    "field": "size",
+    "value": 3000,
+    "constraint": "range[50,2000]"
+  }
+}
+```
+
+### Validation Rules
+
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| `url` | Required, max 2048 chars | "URL cannot be empty" |
+| `size` | 50-2000 for custom | "Size must be 50-2000px" |
+| `colors` | Valid hex format | "Invalid color format" |
+| `colors` | Sufficient contrast | "Colors too similar" |
+| `border_width` | 0-50 pixels | "Border too large" |
+| `format` | png/svg/jpeg | "Unknown format" |
 
 ---
 
-## Migration Guide
+## ⚡ Rate Limiting
 
-### Migrating from V1 to V2
-
-#### Minimal Changes (Keep existing behavior)
-```bash
-# V1
-GET /generate?url=https://example.com
-
-# V2 (equivalent)
-GET /v2/generate?url=https://example.com
-```
-
-#### Take Advantage of New Features
-```javascript
-// V1 - Basic QR
-const response = await fetch('/generate?url=https://example.com');
-
-// V2 - Customized QR
-const response = await fetch('/v2/generate', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    url: 'https://example.com',
-    customization: {
-      size: 'large',
-      error_correction: 'H',
-      colors: {
-        foreground: '#0066CC',
-        background: '#FFFFFF'
-      }
-    }
-  })
-});
-```
-
-#### Feature Comparison
-
-| Feature | V1 | V2 |
-|---------|----|----|
-| **Basic QR Generation** | ✅ | ✅ |
-| **Custom Sizes** | ❌ | ✅ |
-| **Error Correction Levels** | ❌ | ✅ |
-| **Color Customization** | ❌ | ✅ |
-| **Multiple Formats** | ❌ | ✅ |
-| **Border Control** | ❌ | ✅ |
-| **JSON Response** | ✅ | ✅ |
-| **Direct Download** | ✅ | ✅ |
-| **Query Parameters** | ✅ | ✅ |
-| **POST Support** | ❌ | ✅ |
-
-#### Backward Compatibility Promise
-
-✅ **V1 endpoints will never be removed**  
-✅ **No breaking changes to V1 behavior**  
-✅ **V1 continues to receive security updates**  
-⚠️ **New features only added to V2+**
+**Current Status**: Not implemented  
+**Planned**:
+- Default: 100 requests/minute per IP
+- Burst: 10 requests/second
+- Headers: `X-RateLimit-*` will be added
 
 ---
 
 ## 💻 Code Examples
 
-### Client Libraries
-
-#### JavaScript/TypeScript SDK
+### JavaScript/TypeScript SDK
 
 ```typescript
 class QRAPIClient {
   constructor(private baseURL: string = 'http://localhost:3000') {}
 
   async generateQR(url: string, options?: QROptions): Promise<QRResponse> {
-    const response = await fetch(`${this.baseURL}/v2/generate`, {
+    const response = await fetch(`${this.baseURL}/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url, customization: options })
@@ -249,7 +424,7 @@ class QRAPIClient {
   }
 
   async downloadQR(url: string, options?: QROptions): Promise<Blob> {
-    const response = await fetch(`${this.baseURL}/v2/image`, {
+    const response = await fetch(`${this.baseURL}/image`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url, customization: options })
@@ -271,7 +446,7 @@ const qr = await client.generateQR('https://example.com', {
 });
 ```
 
-#### Python Client
+### Python Client
 
 ```python
 import requests
@@ -304,7 +479,7 @@ class QRAPIClient:
             payload["customization"]["colors"] = colors
         
         response = self.session.post(
-            f"{self.base_url}/v2/generate",
+            f"{self.base_url}/generate",
             json=payload
         )
         response.raise_for_status()
@@ -328,7 +503,7 @@ client.save_qr(
 )
 ```
 
-#### cURL Examples
+### cURL Examples
 
 ```bash
 # Function for easy QR generation
@@ -337,7 +512,7 @@ generate_qr() {
   local size="${2:-medium}"
   local output="${3:-qr.png}"
   
-  curl -s -X POST "http://localhost:3000/v2/image" \
+  curl -s -X POST "http://localhost:3000/image" \
     -H "Content-Type: application/json" \
     -d "{
       \"url\": \"$url\",
@@ -366,7 +541,7 @@ A: 2048 characters
 A: Yes, any string can be encoded
 
 **Q: Is there a rate limit?**  
-A: Not currently, but planned for v2.1.0 (100 req/min)
+A: Not currently, but planned (100 req/min)
 
 **Q: Can I use this API in production?**  
 A: Yes, it's production-ready with proper error handling
@@ -384,7 +559,7 @@ A: Higher levels allow more damage but reduce data capacity:
 A: SVG is vector-based, infinitely scalable without quality loss
 
 **Q: How do I embed a logo in the QR code?**  
-A: Use high error correction (H) and overlay logo externally (planned native support in v3.0)
+A: Use high error correction (H) and overlay logo externally (planned native support)
 
 **Q: What's the optimal QR code size?**  
 A: Depends on use case:
@@ -412,8 +587,9 @@ A: CORS is enabled by default. Check your request headers.
 
 - [Main Documentation](README.md)
 - [Development Roadmap](ROADMAP.md)
+- [Architecture Guide](ARCHITECTURE.md)
+- [Contributing Guide](CONTRIBUTING.md)
 - [QR Code Best Practices](https://www.qrcode.com/en/about/standards.html)
-- [API Status Page](https://status.deepplaystudio.com)
 - [GitHub Repository](https://github.com/Tolstoyj/QRCodeGeneratorApi)
 
 ---

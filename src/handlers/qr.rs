@@ -7,7 +7,7 @@ use axum::{
 
 use crate::{
     errors::ApiError,
-    models::v2::{QrRequestV2, QrResponseV2, QrCustomization},
+    models::{QrRequest, QrResponse, QrCustomization},
     services::QrService,
     state::AppState,
 };
@@ -16,8 +16,8 @@ use crate::{
 /// POST /generate
 pub async fn generate_qr_json(
     State(app_state): State<AppState>,
-    Json(request): Json<QrRequestV2>,
-) -> Result<Json<QrResponseV2>, ApiError> {
+    Json(request): Json<QrRequest>,
+) -> Result<Json<QrResponse>, ApiError> {
     // Validate request
     request.validate(app_state.config.max_url_length)?;
 
@@ -28,7 +28,7 @@ pub async fn generate_qr_json(
     let base64_qr = qr_service.generate_qr_base64(&request.url, &request.customization)?;
 
     // Create response
-    let response = QrResponseV2::new(base64_qr, &request.customization);
+    let response = QrResponse::new(base64_qr, &request.customization);
 
     Ok(Json(response))
 }
@@ -37,7 +37,7 @@ pub async fn generate_qr_json(
 /// POST /image
 pub async fn generate_qr_image(
     State(app_state): State<AppState>,
-    Json(request): Json<QrRequestV2>,
+    Json(request): Json<QrRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     // Validate request
     request.validate(app_state.config.max_url_length)?;
@@ -76,13 +76,13 @@ pub async fn generate_qr_image(
 pub async fn generate_qr_query(
     State(app_state): State<AppState>,
     Query(params): Query<QrQueryParams>,
-) -> Result<Json<QrResponseV2>, ApiError> {
+) -> Result<Json<QrResponse>, ApiError> {
     // Extract URL first to avoid partial move
     let url = params.url.clone();
     let customization = params.into_customization()?;
     
     // Convert query params to request
-    let request = QrRequestV2 {
+    let request = QrRequest {
         url,
         customization,
     };
@@ -97,7 +97,7 @@ pub async fn generate_qr_query(
     let base64_qr = qr_service.generate_qr_base64(&request.url, &request.customization)?;
 
     // Create response
-    let response = QrResponseV2::new(base64_qr, &request.customization);
+    let response = QrResponse::new(base64_qr, &request.customization);
 
     Ok(Json(response))
 }
@@ -127,7 +127,7 @@ pub struct QrQueryParams {
 
 impl QrQueryParams {
     fn into_customization(self) -> Result<QrCustomization, ApiError> {
-        use crate::models::v2::{QrSize, ErrorCorrectionLevel, OutputFormat, QrColors};
+        use crate::models::{QrSize, ErrorCorrectionLevel, OutputFormat, QrColors};
         
         let mut customization = QrCustomization::default();
         let _url = self.url; // Move url out first

@@ -4,7 +4,6 @@
 > Generate customizable QR codes with enterprise-grade reliability and blazing-fast performance
 
 ![Rust Version](https://img.shields.io/badge/Rust-1.70+-orange.svg)
-![API Version](https://img.shields.io/badge/API_Version-2.0.0-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)
 ![Docker Ready](https://img.shields.io/badge/Docker-Ready-blue.svg)
@@ -30,7 +29,7 @@
 - **🛡️ Production Ready**: Battle-tested with comprehensive error handling
 - **🎨 Highly Customizable**: Full control over size, colors, and quality
 - **📦 Zero Dependencies**: Standalone service with minimal footprint
-- **🔄 API Versioning**: Backward compatible with smooth migration paths
+- **🔄 Simple API**: Clean, straightforward endpoints for all use cases
 - **🚀 Easy Deployment**: Docker, Railway, and cloud-native ready
 
 ### Sample QR Code
@@ -51,14 +50,14 @@
 | **Scalability** | Handles 1000+ concurrent requests |
 | **Monitoring** | Health checks, structured logging |
 
-### 🆕 Version 2.0 Features
+### 🆕 Enhanced Features
 
 - **Size Control**: Presets (small/medium/large) or custom (50-2000px)
 - **Error Correction**: Four levels (L/M/Q/H) for different use cases
 - **Color Themes**: Custom foreground/background with contrast validation
 - **Border Control**: Adjustable quiet zone (0-50px)
 - **Smart Validation**: URL format, protocol, and security checks
-- **Backward Compatible**: V1 endpoints fully maintained
+- **Production Ready**: Robust and reliable for all environments
 
 ### 📋 Related Documentation
 
@@ -99,24 +98,21 @@ curl "http://localhost:3000/"
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/` | GET | Health check and API info |
-| `/generate` | GET | Generate QR as JSON (v1) |
-| `/image` | GET | Download QR as PNG (v1) |
-| `/v2/generate` | POST/GET | Generate customized QR |
-| `/v2/image` | POST | Download customized QR |
+| `/generate` | POST/GET | Generate customized QR |
+| `/image` | POST | Download customized QR |
 
-### V1 Endpoints (Stable)
-
-#### Health Check
+### Health Check
 ```http
 GET /
 ```
 Returns API status and available endpoints.
 
-#### Generate QR Code (JSON)
+### API Endpoints
+
+#### Generate Customized QR Code (JSON)
 ```http
-GET /generate?url=<your-url>
-```
-Returns QR code as base64-encoded PNG in JSON format.
+POST /generate
+Content-Type: application/json
 
 **Response:**
 ```json
@@ -132,11 +128,9 @@ GET /image?url=<your-url>
 ```
 Returns downloadable PNG image directly.
 
-### V2 Endpoints (Enhanced)
-
 #### Generate Customized QR Code (JSON)
 ```http
-POST /v2/generate
+POST /generate
 Content-Type: application/json
 
 {
@@ -171,12 +165,12 @@ Content-Type: application/json
 
 #### Generate Customized QR Code (Query Parameters)
 ```http
-GET /v2/generate?url=<url>&size=<size>&format=<format>&error_correction=<level>&foreground_color=<hex>&background_color=<hex>&border_width=<number>
+GET /generate?url=<url>&size=<size>&format=<format>&error_correction=<level>&foreground_color=<hex>&background_color=<hex>&border_width=<number>
 ```
 
 #### Generate Customized QR Code (Image Download)
 ```http
-POST /v2/image
+POST /image
 Content-Type: application/json
 
 {
@@ -341,8 +335,7 @@ qr-api/
 │   ├── main.rs           # Application entry point
 │   ├── config/           # Configuration management
 │   ├── handlers/         # HTTP request handlers
-│   │   ├── v1/          # Legacy API handlers
-│   │   └── v2/          # Enhanced API handlers
+│   │   └── qr.rs        # QR generation handlers
 │   ├── models/           # Data structures
 │   ├── services/         # Business logic
 │   ├── middleware/       # Request processing
@@ -399,20 +392,9 @@ cargo outdated
 ## 📖 Usage Examples
 
 ### Using cURL
-
-#### V1 API (Legacy)
-```bash
-# Generate QR code as JSON
-curl "http://localhost:3000/generate?url=https://github.com"
-
-# Download QR code as PNG
-curl "http://localhost:3000/image?url=https://github.com" -o qr_code.png
-```
-
-#### V2 API (Enhanced)
 ```bash
 # Generate customized QR code (POST)
-curl -X POST "http://localhost:3000/v2/generate" \
+curl -X POST "http://localhost:3000/generate" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://github.com",
@@ -428,10 +410,10 @@ curl -X POST "http://localhost:3000/v2/generate" \
   }'
 
 # Generate with query parameters (GET)
-curl "http://localhost:3000/v2/generate?url=https://github.com&size=medium&foreground_color=%2300FF00"
+curl "http://localhost:3000/generate?url=https://github.com&size=medium&foreground_color=%2300FF00"
 
 # Download customized image
-curl -X POST "http://localhost:3000/v2/image" \
+curl -X POST "http://localhost:3000/image" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://github.com",
@@ -445,13 +427,13 @@ curl -X POST "http://localhost:3000/v2/image" \
 ### Using JavaScript/Fetch
 
 ```javascript
-// V1 API - Basic QR code
+// Basic QR generation with query parameters
 const response = await fetch('http://localhost:3000/generate?url=https://github.com');
 const data = await response.json();
 document.getElementById('qr-image').src = data.qr_code;
 
-// V2 API - Customized QR code
-const customQR = await fetch('http://localhost:3000/v2/generate', {
+// Customized QR generation with JSON body
+const customQR = await fetch('http://localhost:3000/generate', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -481,8 +463,9 @@ response = requests.get('http://localhost:3000/generate?url=https://github.com')
 data = response.json()
 print(data['qr_code'])  # Base64 encoded PNG
 
-# Download PNG
-response = requests.get('http://localhost:3000/image?url=https://github.com')
+# Download PNG with customization
+response = requests.post('http://localhost:3000/image', 
+    json={'url': 'https://github.com', 'customization': {'format': 'png'}})
 with open('qr_code.png', 'wb') as f:
     f.write(response.content)
 ```
@@ -502,7 +485,7 @@ function QRGenerator({ url }) {
   const generateQR = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/v2/generate', {
+      const response = await fetch('http://localhost:3000/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -572,7 +555,7 @@ class QRAPIClient:
         }
         
         response = self.session.post(
-            f"{self.base_url}/v2/generate",
+            f"{self.base_url}/generate",
             json=payload
         )
         response.raise_for_status()
@@ -625,7 +608,7 @@ graph TB
 |----------|----------|
 | **Rust + Axum** | Performance, safety, modern async |
 | **Stateless Design** | Horizontal scalability |
-| **Version Separation** | Clean migration path |
+| **Clean Architecture** | Modular design |
 | **Service Layer** | Business logic isolation |
 | **Structured Errors** | Consistent error handling |
 
@@ -644,7 +627,7 @@ http GET localhost:3000/
 http GET localhost:3000/generate url==https://example.com
 
 # Generate customized QR (v2)
-http POST localhost:3000/v2/generate \
+http POST localhost:3000/generate \
   url=https://example.com \
   customization:='{
     "size": "large",

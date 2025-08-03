@@ -1,7 +1,7 @@
 use crate::{
     config::Config,
     errors::ApiError,
-    models::v2::{QrCustomization, OutputFormat},
+    models::{QrCustomization, OutputFormat},
 };
 use qrcode::QrCode;
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};

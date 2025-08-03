@@ -62,14 +62,14 @@ impl QrCustomization {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct QrRequestV2 {
+pub struct QrRequest {
     pub url: String,
     
     #[serde(default)]
     pub customization: QrCustomization,
 }
 
-impl QrRequestV2 {
+impl QrRequest {
     pub fn validate(&self, max_url_length: usize) -> Result<(), ApiError> {
         // Validate URL
         if self.url.trim().is_empty() {
@@ -134,7 +134,7 @@ impl QrRequestV2 {
 }
 
 #[derive(Debug, Serialize)]
-pub struct QrResponseV2 {
+pub struct QrResponse {
     pub qr_code: String,
     pub format: String,
     pub size: String,
@@ -143,7 +143,7 @@ pub struct QrResponseV2 {
     pub border_width: u32,
 }
 
-impl QrResponseV2 {
+impl QrResponse {
     pub fn new(
         qr_code: String,
         customization: &QrCustomization,
@@ -168,8 +168,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_qr_request_v2_validation_success() {
-        let request = QrRequestV2 {
+    fn test_qr_request_validation_success() {
+        let request = QrRequest {
             url: "https://example.com".to_string(),
             customization: QrCustomization::default(),
         };
@@ -177,8 +177,8 @@ mod tests {
     }
 
     #[test]
-    fn test_qr_request_v2_validation_empty_url() {
-        let request = QrRequestV2 {
+    fn test_qr_request_validation_empty_url() {
+        let request = QrRequest {
             url: "".to_string(),
             customization: QrCustomization::default(),
         };
@@ -186,8 +186,8 @@ mod tests {
     }
 
     #[test]
-    fn test_qr_request_v2_validation_url_too_long() {
-        let request = QrRequestV2 {
+    fn test_qr_request_validation_url_too_long() {
+        let request = QrRequest {
             url: "a".repeat(3000),
             customization: QrCustomization::default(),
         };
@@ -195,8 +195,8 @@ mod tests {
     }
 
     #[test]
-    fn test_qr_request_v2_validation_suspicious_url() {
-        let request = QrRequestV2 {
+    fn test_qr_request_validation_suspicious_url() {
+        let request = QrRequest {
             url: "javascript:alert('xss')".to_string(),
             customization: QrCustomization::default(),
         };
@@ -204,8 +204,8 @@ mod tests {
     }
 
     #[test]
-    fn test_qr_request_v2_validation_plain_text() {
-        let request = QrRequestV2 {
+    fn test_qr_request_validation_plain_text() {
+        let request = QrRequest {
             url: "Hello, World!".to_string(),
             customization: QrCustomization::default(),
         };
